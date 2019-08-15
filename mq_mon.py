@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-
 import json
+import logging
 
 import paho
 import paho.mqtt.client as mqtt
@@ -38,7 +38,7 @@ tx=0
 rx=0
 
 def on_connect(mqttc, obj, flags, rc):
-    print("rc: " + str(rc))
+    logging.warning("rc: " + str(rc))
 
 def on_message(mqttc, obj, msg):
     global rx, tx
@@ -58,29 +58,27 @@ def on_message(mqttc, obj, msg):
 
     msgcounts = f'rxpm: {rx} txpm: {tx}'
 
-    print(msgcounts)
-    # Write four lines of text.
+    logging.info(msgcounts)
 
     draw.text((x, top+0), "IP: "+IP, font=font, fill=255)
     draw.text((x, top+8), CPU, font=font, fill=255)
     draw.text((x, top+16), msgcounts, font=font, fill=255)
 
-    # Display image.
     disp.image(image)
     disp.show()
 
 def on_subscribe(mqttc, obj, mid, granted_qos):
-    print("Subscribed: " + str(mid) + " " + str(granted_qos))
+    logging.warning("Subscribed: " + str(mid) + " " + str(granted_qos))
 
 def on_log(mqttc, obj, level, string):
-    print(string)
+    logging.warning(string)
 
 mqttc = mqtt.Client()
 mqttc.on_message = on_message
 mqttc.on_connect = on_connect
 mqttc.on_subscribe = on_subscribe
 
-mqttc.connect("localhost", 1883, 60)
+mqttc.connect("192.168.1.11", 1883, 60)
 mqttc.subscribe("$SYS/broker/load/messages/+/1min", 0)
 
 mqttc.loop_forever()
