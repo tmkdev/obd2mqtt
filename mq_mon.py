@@ -36,11 +36,10 @@ font = ImageFont.load_default()
 
 tx=0
 rx=0
+elmstatus='ELM?'
+elmproto=None
 
-def on_connect(mqttc, obj, flags, rc):
-    logging.warning("rc: " + str(rc))
-
-def on_message(mqttc, obj, msg):
+def handleSysMessage(msg):
     global rx, tx
     topicparts = msg.topic.split('/')
 
@@ -49,23 +48,49 @@ def on_message(mqttc, obj, msg):
     if topicparts[4] == 'received':
         rx = int(float(msg.payload.decode("utf-8")))
 
+    drawscreen()
+
+def handleStatusMessage(msg):
+    global elmstatus, elmproto
+
+    payloaddict = json.loads(msg.payload.decode("utf-8"))
+
+    elmstatus = f"{payloaddict['status']}"
+    elmproto = f"{payloaddict['protocol_name']}"
+
+    drawscreen()
+
+def drawscreen():
     draw.rectangle((0, 0, width, height), outline=0, fill=0)
 
     cmd = "hostname -I | cut -d\' \' -f1"
-    IP = subprocess.check_output(cmd, shell=True).decode("utf-8")
-    cmd = "top -bn1 | grep load | awk '{printf \"CPU Load: %.2f\", $(NF-2)}'"
-    CPU = subprocess.check_output(cmd, shell=True).decode("utf-8")
+    IP = subprocess.check_output(cmd, shell=True).decode("utf-8").strip()
+    cmd = "top -bn1 | grep load | awk '{printf \"%.2f\", $(NF-2)}'"
+    CPU = subprocess.check_output(cmd, shell=True).decode("utf-8").strip()
 
     msgcounts = f'rxpm: {rx} txpm: {tx}'
 
     logging.info(msgcounts)
 
-    draw.text((x, top+0), "IP: "+IP, font=font, fill=255)
-    draw.text((x, top+8), CPU, font=font, fill=255)
-    draw.text((x, top+16), msgcounts, font=font, fill=255)
+    draw.text((x, top+0), f"{IP} {CPU}", font=font, fill=255)
+    draw.text((x, top+8), msgcounts, font=font, fill=255)
+    draw.text((x, top+16), elmstatus, font=font, fill=255)
+    draw.text((x, top+24), elmproto, font=font, fill=255)
 
     disp.image(image)
     disp.show()
+
+def on_connect(mqttc, obj, flags, rc):
+    logging.warning("rc: " + str(rc))
+
+def on_message(mqttc, obj, msg):
+    if msg.topic.startswith('$SYS'):
+        handleSysMessage(msg)
+    elif msg.topic.startswith('/obd_status/connection'):
+        handleStatusMessage(msg)
+    else:
+        logging.critical(f'No handler for {msg.topic}')
+
 
 def on_subscribe(mqttc, obj, mid, granted_qos):
     logging.warning("Subscribed: " + str(mid) + " " + str(granted_qos))
@@ -80,5 +105,6 @@ mqttc.on_subscribe = on_subscribe
 
 mqttc.connect('localhost', 1883, 60, bind_address="")
 mqttc.subscribe("$SYS/broker/load/messages/+/1min", 0)
+mqttc.subscribe('/obd_status/connection', 0)
 
 mqttc.loop_forever()

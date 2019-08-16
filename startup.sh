@@ -11,7 +11,7 @@ if [ $mode == 0 ]; then
     cd $HOME/ELM327-emulator
     echo -e 'scenario car\n"RUNNING"' | /usr/bin/python3 -m elm -b $HOME/testlog.out &
 
-    sleep 1
+    sleep 2
 
     export OBDPORT=`head -n 1  $HOME/testlog.out`
 

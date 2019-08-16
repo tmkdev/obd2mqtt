@@ -17,7 +17,7 @@ def payload2json(payload):
 
 def newval(r):
     try:
-        payload_dict = {'value': '{0.magnitude}'.format(r.value), 'name': r.command.name, 'time': r.time, 'units': '{0.units}'.format(r.value) }
+        payload = {'value': '{0.magnitude}'.format(r.value), 'name': r.command.name, 'time': r.time, 'units': '{0.units}'.format(r.value) }
 
         topic = '/obd/{0}'.format(r.command.name)
 
@@ -41,7 +41,7 @@ def main(port):
         topic = '/obd_status/connection'
         payload = {'status': connection.status(), 'protocol_name': connection.protocol_name()}
 
-        logging.warning(payload)
+        logging.info(payload)
 
         client.reconnect()
         client.publish(topic, payload2json(payload))
