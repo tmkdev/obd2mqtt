@@ -78,7 +78,7 @@ mqttc.on_message = on_message
 mqttc.on_connect = on_connect
 mqttc.on_subscribe = on_subscribe
 
-mqttc.connect("192.168.1.11", 1883, 60)
+mqttc.connect('localhost', 1883, 60, bind_address="")
 mqttc.subscribe("$SYS/broker/load/messages/+/1min", 0)
 
 mqttc.loop_forever()
