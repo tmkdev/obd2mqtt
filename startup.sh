@@ -30,6 +30,6 @@ done
 
 
 cd $HOME/obd2mqtt
-/usr/bin/python3 obd_gateway.py > $HOME/tester.log &
+/usr/bin/python3 obd_gateway.py > $HOME/obd_gateway.log 2>&1 &
 sleep 5
-/usr/bin/python3 mq_mon.py > $HOME/mq_mon.log &
+/usr/bin/python3 mq_mon.py > $HOME/mq_mon.log 2>&1 &

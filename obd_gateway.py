@@ -19,6 +19,8 @@ def newval(r):
     try:
         payload = {'value': '{0.magnitude}'.format(r.value), 'name': r.command.name, 'time': r.time, 'units': '{0.units}'.format(r.value) }
 
+        payload = { **payload, **pids[r.command.name] }
+
         topic = '/obd/{0}'.format(r.command.name)
 
         client.reconnect()
@@ -41,7 +43,14 @@ def main(port):
         topic = '/obd_status/connection'
         payload = {'status': connection.status(), 'protocol_name': connection.protocol_name()}
 
-        logging.info(payload)
+        logging.info(topic, payload)
+
+        client.reconnect()
+        client.publish(topic, payload2json(payload))
+
+        logging.info(topic, payload)
+        topic = '/obd_status/pids'
+        payload = list(pids.keys())
 
         client.reconnect()
         client.publish(topic, payload2json(payload))
